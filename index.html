@@ -335,7 +335,8 @@ html[dir="rtl"] .pop{direction:rtl; text-align:right}
 .tabs button .ico{width:22px; height:22px}
 .tabs button[aria-current="true"]{color:var(--navy); font-weight:700}
 .tabs button[aria-current="true"] .ico{color:var(--terra-ink)}
-dialog.sheet{border:0; padding:0; margin:auto auto 0; width:100%; max-width:560px; max-height:86vh; border-radius:22px 22px 0 0; background:var(--cream); color:var(--ink); overflow:auto}
+dialog.sheet{border:0; padding:0; margin:auto auto 0; width:100%; max-width:560px; max-height:86vh; border-radius:22px 22px 0 0; background:var(--cream); color:var(--ink); overflow:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch}
+body.locked{position:fixed; left:0; right:0; overflow:hidden; width:100%}
 dialog.sheet::backdrop{background:rgba(15,39,66,.45)}
 .sheet-in{padding-block:10px calc(24px + env(safe-area-inset-bottom,0px))}
 .grab{width:40px; height:5px; border-radius:3px; background:var(--line); margin:0 auto 12px}
@@ -805,9 +806,15 @@ function openSheet(kind){
   if(kind==='guide') h=`<div class="sheet-head"><h2>${esc(t('ui.chapters'))}</h2><button class="xbtn" type="button" data-close aria-label="${esc(t('ui.close'))}">${ico('x')}</button></div>${tocHTML()}`;
   if(kind==='hosts') h=`<div class="sheet-head"><h2>Antonio &amp; Andrea</h2><button class="xbtn" type="button" data-close aria-label="${esc(t('ui.close'))}">${ico('x')}</button></div>${hostsBlock()}<p class="hint">${esc(t('ui.contactHint'))}</p><div class="sos" style="margin-top:16px">${R.sos().replace(/^<div class="sos">|<\/div>$/g,'')}</div>`;
   $('#sheetIn').innerHTML='<div class="grab"></div>'+h;
+  lockScroll();
   try{sheet.showModal()}catch(e){sheet.setAttribute('open','')}
+  sheet.scrollTop=0;
 }
-function closeSheet(){ if(sheet.open){try{sheet.close()}catch(e){sheet.removeAttribute('open')}} }
+let lockY=0;
+function lockScroll(){ if(document.body.classList.contains('locked')) return; lockY=window.scrollY; document.body.style.top=(-lockY)+'px'; document.body.classList.add('locked'); }
+function unlockScroll(){ if(!document.body.classList.contains('locked')) return; document.body.classList.remove('locked'); document.body.style.top=''; window.scrollTo(0,lockY); }
+function closeSheet(){ if(sheet.open){try{sheet.close()}catch(e){sheet.removeAttribute('open')}} unlockScroll(); }
+sheet.addEventListener('close',unlockScroll);
 sheet.addEventListener('click',e=>{ if(e.target===sheet) closeSheet(); });
 
 let tt;
